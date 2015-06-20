@@ -15,7 +15,7 @@ theed_racetrack_screenplay = RaceTrack:new {
 		expiryTime = (1*3600), --Amount of time in seconds that a player will be expired from the track (stops silly times over this limit)
     resetTime = (22*3600)+(10*60), --Time of day in seconds that track resets High Scores
 		waypointRadius=10, -- size of the waypoint observer
-		raceCoordinator = {x=-4866,y=4169,z=6}, -- Location of the race coordinator. Note the Z coord is VERY important or conversations break
+		raceCoordinator = {x=-4871.03,y=4151.4,z=7.01562}, -- Location of the race coordinator. Note the Z coord is VERY important or conversations break
 		waypoints = { {x = -5050, y = 4236}, -- Merchant Row
 					  {x = -5145, y = 4290}, -- Shamm's Cantina
 					  {x = -5251, y = 4311}, -- Bridge
@@ -32,10 +32,10 @@ theed_racetrack_screenplay = RaceTrack:new {
 					  {x = -5002, y = 4063}, -- Shuttle Tower Turn
 					  {x = -4969, y = 4144}, -- Hospital Corner
 					  {x = -4966, y = 4209}, -- The Last Bend
-					  {x = -4866, y = 4169} -- Finish Line
-					}
+					  {x = -4871, y = 4151} -- Finish Line
+					} 
 		}
-}
+}   
 
 registerScreenPlay("theed_racetrack_screenplay", true)
 

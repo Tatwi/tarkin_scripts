@@ -43,6 +43,11 @@
 
 object_tangible_beta_donham_terminal = object_tangible_beta_shared_donham_terminal:new {
 
+  -- Potentially to be used as an in game message board at a later date.
+  gameObjectType = 16396,
+  lookAtText = "@bartender:msg_yes",
+  objectName = "@bartender:msg_yes"
+
 }
 
 ObjectTemplates:addTemplate(object_tangible_beta_donham_terminal, "object/tangible/beta/donham_terminal.iff")
