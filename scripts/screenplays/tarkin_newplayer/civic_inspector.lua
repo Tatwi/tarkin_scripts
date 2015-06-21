@@ -10,7 +10,10 @@ local ObjectManager = require("managers.object.object_manager")
 CivicInspectorScreenPlay = ScreenPlay:new {
   numberOfActs = 1,
   screenplayName = "CivicInspectorScreenPlay",
-  
+  states = {
+    active = 2,
+    complete = 4,
+  }, 
   trackConfig={
     debugMode=1, -- 0 = off, 1 = print debug messages
     planetName = "naboo",
@@ -21,8 +24,15 @@ CivicInspectorScreenPlay = ScreenPlay:new {
     expiryTime = (1*3600), --Amount of time in seconds that a player will be expired from the track (stops silly times over this limit)
     resetTime = (22*3600)+(10*60), --Time of day in seconds that track resets High Scores
     waypointRadius=3, -- size of the waypoint observer
-    cashReward = 500,
-    itemReward = "",
+    cashReward = 500, -- set to "" for no cash reward
+    rewardType = "all", -- Pick One: all = give whole list, random = pick one item from the list, lootgroup = pick 1 item from the lootGroup
+    lootGroup = "junk", -- any single loot group
+    itemRewards = {
+      "object/tangible/component/structure/wall_module.iff",
+      "object/tangible/furniture/all/frn_all_lamp_desk_s01.iff",
+      "object/tangible/furniture/all/frn_all_chair_kitchen_s2.iff",
+      "object/tangible/loot/misc/ledger_s01.iff",
+    },
     waypoints = { 
       {x = -4913, y = 4160, wpName = "Your first stop is over by that lady..."},
       {x = -4936, y = 4149, wpName = "Next up is the crafting station..."},
@@ -51,7 +61,6 @@ end
 
 
 
-
 -- Handle Quest
 
 function CivicInspectorScreenPlay:enteredWaypoint(pActiveArea, pObject)
@@ -77,6 +86,7 @@ function CivicInspectorScreenPlay:startRacing(pObject)
     local time = getTimestampMilli()
     writeScreenPlayData(pObject, self.trackConfig.trackName, "starttime", time)
     writeScreenPlayData(pObject, self.trackConfig.trackName, "waypoint", 1)
+    creatureObject:setScreenPlayState(CivicInspectorScreenPlay.states.active, CivicInspectorScreenPlay.screenplayName) -- Set quest active
     creatureObject:sendSystemMessage("You're now a Civil Inspector. You have 1 hour to complete your job.")
     creatureObject:sendSystemMessage(self.trackConfig.waypoints[1].wpName) -- Display first location
   end)
@@ -114,7 +124,7 @@ function CivicInspectorScreenPlay:actuallyProcessWaypoint(pObject,index)
     local waypointID = playerObject:addWaypoint(self.trackConfig.planetName, self.trackConfig.waypoints[index+1].wpName, "", self.trackConfig.waypoints[index+1].x, self.trackConfig.waypoints[index+1].y, WAYPOINTWHITE,true,true,WAYPOINTRACETRACK)
     local seconds = self:getLaptime(pObject)
     -- Update Player on status
-    creatureObject:sendSystemMessage("Time Elapsed:" .. self:roundNumber(seconds/1000/60) .. "minutes")
+    creatureObject:sendSystemMessage("Time passed so far: " .. self:roundNumber(seconds/1000/60) .. "minutes")
     creatureObject:sendSystemMessage(self.trackConfig.waypoints[index+1].wpName)
     writeScreenPlayData(pObject,self.trackConfig.trackName, "waypoint", index+1)
   end)
@@ -122,14 +132,19 @@ end
 
 function  CivicInspectorScreenPlay:finalWaypoint(pActiveArea, pObject)
   ObjectManager.withCreatureAndPlayerObject(pObject, function(creatureObject,playerObject)
-    creatureObject:playMusicMessage("sound/music_combat_bfield_vict.snd")
-    -- Grant reward
-    creatureObject:addCashCredits(500, true)
-    
-    clearScreenPlayData(pObject,self.trackConfig.trackName )
     playerObject:removeWaypointBySpecialType(WAYPOINTRACETRACK)
+    -- set as complete for use in conversation
+    creatureObject:setScreenPlayState(CivicInspectorScreenPlay.states.complete, CivicInspectorScreenPlay.screenplayName)
+    creatureObject:playMusicMessage("sound/music_combat_bfield_vict.snd")
+    clearScreenPlayData(pObject,self.trackConfig.trackName )
   end)
+end
 
+function  CivicInspectorScreenPlay:resetQuest(pObject)
+  ObjectManager.withCreatureAndPlayerObject(pObject, function(creatureObject,playerObject)
+    creatureObject:playMusicMessage("sound/music_combat_bfield_vict.snd")
+    clearScreenPlayData(pObject,self.trackConfig.trackName )
+  end)
 end
 
 function CivicInspectorScreenPlay:getLaptime(pObject)
@@ -198,7 +213,9 @@ civicinspector_convo_handler = Object:new {
 function civicinspector_convo_handler:getNextConversationScreen(conversationTemplate, conversingPlayer, selectedOption)
   local creature = LuaCreatureObject(conversingPlayer)
   local convosession = creature:getConversationSession()
-  local credits = creature:getCashCredits()
+  local pInventory = creature:getSlottedObject("inventory")
+  local inventory = LuaSceneObject(pInventory)
+  local notenoughspace = "false"
   
   lastConversation = nil
 
@@ -215,15 +232,91 @@ function civicinspector_convo_handler:getNextConversationScreen(conversationTemp
        end
     end
     
-    local insufficientFunds = "false"
     
     if ( lastConversationScreen == nil ) then
-      nextConversationScreen = conversation:getInitialScreen()
+      local questActive = creature:hasScreenPlayState(CivicInspectorScreenPlay.states.active, CivicInspectorScreenPlay.screenplayName)
+      
+            
+      print("questActive is " .. questActive)
+        
+      if ( questActive == 0) then -- true or false question
+        -- Quest has not started
+        print("no screenplaystate so must not be active")
+        nextConversationScreen = conversation:getInitialScreen()
+      elseif ( creature:hasScreenPlayState(CivicInspectorScreenPlay.states.complete, CivicInspectorScreenPlay.screenplayName) == 1 ) then
+        -- Quest completed
+        nextConversationScreen = conversation:getScreen("quest_complete")  
+      else
+      -- Quest is active
+       print("Quest is currently active")
+        nextConversationScreen = conversation:getScreen("quest_active")
+      end 
     else    
       local luaLastConversationScreen = LuaConversationScreen(lastConversationScreen)
       local optionLink = luaLastConversationScreen:getOptionLink(selectedOption)
       
-      nextConversationScreen = conversation:getScreen(optionLink)
+      if (optionLink == "west_end") then
+        -- Player has accepted the quest
+        creature:setScreenPlayState(CivicInspectorScreenPlay.states.active, CivicInspectorScreenPlay.screenplayName)
+      end
+      
+      if (optionLink == "give_rewards") then
+        local pieces = #CivicInspectorScreenPlay.trackConfig.itemRewards -- gets # of items in the reward list
+        
+        -- Check for room in inventory
+        local numberOfItems = inventory:getContainerObjectsSize()
+        local freeSpace = 80 - numberOfItems
+        
+        print("Items in inventory: " .. numberOfItems)
+        print("Free Space: " .. freeSpace)
+        print("Pieces of loot: " .. pieces)
+        
+        if (inventory:hasFullContainerObjects() == true and CivicInspectorScreenPlay.trackConfig.rewardType ~= "all") then
+          -- Bail if the player doesn't have enough space in their inventory.
+          notenoughspace = "true"
+          creature:sendSystemMessage("You need 1 available inventory space to complete this quest.")
+        elseif (CivicInspectorScreenPlay.trackConfig.rewardType == "all" and freeSpace < pieces) then
+          -- Bail if the player doesn't have enough space in their inventory.
+          notenoughspace = "true"
+          creature:sendSystemMessage("You do not have enough inventory space to complete this quest. Please free up " .. pieces .. " spaces and speak to the quest giver again")
+        else
+          -- Reset quest state
+          creature:removeScreenPlayState(CivicInspectorScreenPlay.states.active, CivicInspectorScreenPlay.screenplayName)
+          creature:removeScreenPlayState(CivicInspectorScreenPlay.states.complete, CivicInspectorScreenPlay.screenplayName)
+          
+          -- Grant cash reward, if there is one
+          if (CivicInspectorScreenPlay.trackConfig.cashReward ~= 0) then
+            creature:addCashCredits(CivicInspectorScreenPlay.trackConfig.cashReward, true)
+            creature:sendSystemMessage("You have earned " .. CivicInspectorScreenPlay.trackConfig.cashReward .. " credits.")
+          end
+          
+          -- Grant item rewards, if there are any
+          if (CivicInspectorScreenPlay.trackConfig.itemRewards[1] ~= "") then
+            if (CivicInspectorScreenPlay.trackConfig.rewardType == "random") then
+              -- Give 1 random item from your list
+              rndNum = getRandomNumber(1, pieces)
+              local pItem = giveItem(pInventory, CivicInspectorScreenPlay.trackConfig.itemRewards[rndNum], -1)
+            elseif (CivicInspectorScreenPlay.trackConfig.rewardType == "all") then
+              -- Give all items
+              for itemCount = 1, pieces do
+                local pItem = giveItem(pInventory, CivicInspectorScreenPlay.trackConfig.itemRewards[itemCount], -1)
+              end
+            elseif (CivicInspectorScreenPlay.trackConfig.rewardType == "lootgroup") then
+              -- Give 1 loot item
+              createLoot(pInventory, CivicInspectorScreenPlay.trackConfig.lootGroup, 0, true)
+            end
+            creature:sendSystemMessage("You were given " .. pieces .. " pieces of loot.")
+          end  
+          
+        end
+      end
+      
+      -- Nearly always this will just play the next screen in the convo
+      if (notenoughspace == "true") then
+        nextConversationScreen = conversation:getScreen("no_space")
+      else
+        nextConversationScreen = conversation:getScreen(optionLink)
+      end
 
     end  -- ending if ( lastConversationScreen == nil )
   end -- ending if ( conversation ~= nil )

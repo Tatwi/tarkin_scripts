@@ -91,6 +91,48 @@ civicinspector_quest_east = ConvoScreen:new {
 }
 civicinspector_template:addScreen(civicinspector_quest_east);
 
+civicinspector_quest_active = ConvoScreen:new {
+  id = "quest_active",
+  leftDialog = "",
+  customDialogText = "Didn't I give you a job to do?.",
+  stopConversation = "false",
+  options = { 
+    {"You sure did, I will get right on it!", "bye"}
+  }
+}
+civicinspector_template:addScreen(civicinspector_quest_active);
+
+
+civicinspector_quest_complete = ConvoScreen:new {
+  id = "quest_complete",
+  leftDialog = "",
+  customDialogText = "Hmmm... looks like you did well enough. Here's a little something for your time.",
+  stopConversation = "false",
+  options = { 
+    {"Great, thanks!", "give_rewards"}
+  }
+}
+civicinspector_template:addScreen(civicinspector_quest_complete);
+
+civicinspector_give_rewards = ConvoScreen:new {
+  id = "give_rewards",
+  leftDialog = "",
+  customDialogText = "Thanks for all your help",
+  stopConversation = "true",
+  options = { 
+  }
+}
+civicinspector_template:addScreen(civicinspector_give_rewards);
+
+civicinspector_no_space = ConvoScreen:new {
+  id = "no_space",
+  leftDialog = "",
+  customDialogText = "Looks like you need to make some room in your inventory before I can give you a reward!",
+  stopConversation = "true",
+  options = { 
+  }
+}
+civicinspector_template:addScreen(civicinspector_no_space);
 
 -- About Theed
 
