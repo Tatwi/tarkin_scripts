@@ -164,3 +164,6 @@ includeFile("conversations/travel/star_pilot_from_theed_conv_handler.lua")
 includeFile("conversations/travel/star_pilot_to_theed_conv_handler.lua")
 includeFile("conversations/travel/wolten_kinhara_to_coronet_conv_handler.lua")
 includeFile("conversations/travel/wolten_kinhara_from_coronet_conv_handler.lua")
+
+-- Tarkin New Player Festival
+includeFile("conversations/tarkin_newplayer/civic_inspector.lua")

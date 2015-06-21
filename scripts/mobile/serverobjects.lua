@@ -45,3 +45,6 @@ includeFile("outfits/serverobjects.lua")
 
 -- Tarkin Travel System
 includeFile("travel/serverobjects.lua")
+
+-- Tarkin New Player Festival
+includeFile("tarkin_newplayer/serverobjects.lua")

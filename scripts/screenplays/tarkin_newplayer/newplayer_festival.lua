@@ -84,7 +84,7 @@ function NewPlayerFestivalScreenPlay:spawnMobiles()
   local Chef = spawnMobile("naboo", "commoner_old", 1, -4877.13, 6.0, 4142.73, -52, 0 )
   local Traveler = spawnMobile("naboo", "judge", 1, -4869.19, 6.0, 4141.64, -103, 0 )
   local Scout = spawnMobile("naboo", "farmer", 1, -4878.72, 6.0, 4137.69, 127, 0 )
-  local Engineer = spawnMobile("naboo", "noble", 1, -4884.86, 6.0, 4150.41, -14, 0 )
+  --local Engineer = spawnMobile("naboo", "noble", 1, -4884.86, 6.0, 4150.41, -14, 0 )
   
 
 end

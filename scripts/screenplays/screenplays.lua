@@ -403,4 +403,4 @@ includeFile("travel/planetary_travel_yavin4.lua")
 --includeFile("travel/planetary_travel_lok.lua") -- No public shuttles exist at this time.
 
 -- New Player Festival
-includeFile("tarkin_newplayer/newplayer_festival.lua")
+includeFile("tarkin_newplayer/serverobjects.lua")
