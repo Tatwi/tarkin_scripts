@@ -50,46 +50,40 @@ civicinspector_template:addScreen(civicinspector_quest_start);
 civicinspector_quest2 = ConvoScreen:new {
   id = "quest2",
   leftDialog = "",
-  customDialogText = "Thanks. Look, if I give you a checklist and my guide book, could you complete one the three routes for me, please? The routes are broken by region: West End, Theed Center, and East End. Let me know which you would like to do.",
+  customDialogText = "Thanks. Look, if I give you a checklist and my guide book, could you complete our routes for me, please?",
   stopConversation = "false",
   options = {
-    {"I'll take the West End.", "quest_west"},
-    {"Theed Center sounds good.", "quest_center"},
-    {"East End, that's near by.", "quest_east"},
+    {"I don't know... what's in it for me?", "quest3"},
     {"On second thought, I don't have time right now.", "bye"}
   }
 }
 civicinspector_template:addScreen(civicinspector_quest2);
 
-civicinspector_quest_west = ConvoScreen:new {
-  id = "quest_west",
-  leftDialog = "",
-  customDialogText = "You can walk, drive, or take the shuttle to the West End to get started.",
-  stopConversation = "true",
-  options = { 
-  }
-}
-civicinspector_template:addScreen(civicinspector_quest_west);
 
-civicinspector_quest_center = ConvoScreen:new {
-  id = "quest_center",
+civicinspector_quest3 = ConvoScreen:new {
+  id = "quest3",
   leftDialog = "",
-  customDialogText = "Have fun storming the castle!",
-  stopConversation = "true",
-  options = { 
+  customDialogText = "I can put in a requisition order for some new equipment *wink* *wink* and pay you ...  2000 credits. Heck, I can even throw in something from the city's unclaimed lost and found! I just need this done in a hour. What do you say?",
+  stopConversation = "false",
+  options = {
+    {"Was just pulling your leg. Sure I'll help you!", "quest_accept"},
+    {"Sorry, I am not interested.", "bye"}
   }
 }
-civicinspector_template:addScreen(civicinspector_quest_center);
+civicinspector_template:addScreen(civicinspector_quest3);
 
-civicinspector_quest_east = ConvoScreen:new {
-  id = "quest_east",
+
+civicinspector_quest_accept = ConvoScreen:new {
+  id = "quest_accept",
   leftDialog = "",
-  customDialogText = "Thanks. I have to get back to work...",
+  customDialogText = "You can walk, drive, or take the shuttle if you would like. It's also helpful to toggle on the On Screen Waypoint Monitor. You will find in the Options Menu by pressing ctl+o and selecting the Misc page.",
   stopConversation = "true",
   options = { 
   }
 }
-civicinspector_template:addScreen(civicinspector_quest_east);
+civicinspector_template:addScreen(civicinspector_quest_accept);
+
+
 
 civicinspector_quest_active = ConvoScreen:new {
   id = "quest_active",
@@ -106,7 +100,7 @@ civicinspector_template:addScreen(civicinspector_quest_active);
 civicinspector_quest_complete = ConvoScreen:new {
   id = "quest_complete",
   leftDialog = "",
-  customDialogText = "Hmmm... looks like you did well enough. Here's a little something for your time.",
+  customDialogText = "Hmmm... looks like you did well enough. Here's the payment we talked about earlier.",
   stopConversation = "false",
   options = { 
     {"Great, thanks!", "give_rewards"}
@@ -117,7 +111,7 @@ civicinspector_template:addScreen(civicinspector_quest_complete);
 civicinspector_give_rewards = ConvoScreen:new {
   id = "give_rewards",
   leftDialog = "",
-  customDialogText = "Thanks for all your help",
+  customDialogText = "Thanks for all your help. If you're willing to do the route for me another time, please come see me again.",
   stopConversation = "true",
   options = { 
   }

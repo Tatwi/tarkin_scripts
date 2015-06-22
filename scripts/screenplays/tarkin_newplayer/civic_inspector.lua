@@ -1,6 +1,7 @@
 -- Tarikin New Player Festival
 -- www.tarkin.org
 -- Created by R. Bassett Jr. (Tatwi) www.tpot.ca 2015
+-- Based upon the racetrack engine
 -- Function: A collection of activities to help new players better understand the game.
 
 
@@ -17,12 +18,10 @@ CivicInspectorScreenPlay = ScreenPlay:new {
   trackConfig={
     debugMode=1, -- 0 = off, 1 = print debug messages
     planetName = "naboo",
-    trackName="WESTEND",  -- Internal trackname , should be unique to the track
+    trackName="CivicInspector",  -- Internal trackname , should be unique to the track
     className="CivicInspectorScreenPlay", -- Class name of this class
-    trackCheckpoint="@theme_park/racing/racing:keren_waypoint_name_checkpoint", --Waypoint names
-    timeResolution=2, -- number of decimal places to use for the laptimes 0 = none, 1 = well 1 etc
-    expiryTime = (1*3600), --Amount of time in seconds that a player will be expired from the track (stops silly times over this limit)
-    resetTime = (22*3600)+(10*60), --Time of day in seconds that track resets High Scores
+    timeResolution=0, -- number of decimal places to use for the time updates 0 = none
+    expiryTime = 3600, --Amount of time in seconds that a player will be expired from the quest
     waypointRadius=3, -- size of the waypoint observer
     cashReward = 500, -- set to "" for no cash reward
     rewardType = "all", -- Pick One: all = give whole list, random = pick one item from the list, lootgroup = pick 1 item from the lootGroup
@@ -36,6 +35,7 @@ CivicInspectorScreenPlay = ScreenPlay:new {
     waypoints = { 
       {x = -4913, y = 4160, wpName = "Your first stop is over by that lady..."},
       {x = -4936, y = 4149, wpName = "Next up is the crafting station..."},
+      {x = -5061, y = 4098, wpName = "The Hotel fountain, techinally operated by the city..."},
       {x = -4884, y = 4150, wpName = "Great work! Report back to the Civil Inspector for your reward."} -- Return to quest giver
     }
   } -- End trackConfig1
@@ -122,11 +122,25 @@ end
 function CivicInspectorScreenPlay:actuallyProcessWaypoint(pObject,index)
   ObjectManager.withCreatureAndPlayerObject(pObject, function(creatureObject,playerObject)
     local waypointID = playerObject:addWaypoint(self.trackConfig.planetName, self.trackConfig.waypoints[index+1].wpName, "", self.trackConfig.waypoints[index+1].x, self.trackConfig.waypoints[index+1].y, WAYPOINTWHITE,true,true,WAYPOINTRACETRACK)
-    local seconds = self:getLaptime(pObject)
-    -- Update Player on status
-    creatureObject:sendSystemMessage("Time passed so far: " .. self:roundNumber(seconds/1000/60) .. "minutes")
-    creatureObject:sendSystemMessage(self.trackConfig.waypoints[index+1].wpName)
     writeScreenPlayData(pObject,self.trackConfig.trackName, "waypoint", index+1)
+    
+    -- Update Player on quest status 
+    local timePassed = self:getLaptime(pObject) / 1000 -- miliseconds to seconds
+    local timeLeft = self.trackConfig.expiryTime - timePassed 
+    local timeType = " minutes"
+    if (timeLeft < 60) then
+      timeType = " seconds"
+    else
+      if (timeLeft < 120) then
+        timeType = " minute" -- because pluralization matters people! :)
+      end
+      timeLeft = timeLeft / 60 -- show time in minutes
+    end
+    timeLeft = self:roundNumber(timeLeft) -- drop the decimal places
+    
+    creatureObject:sendSystemMessage("You have " .. timeLeft .. timeType .. " to complete your mission.")
+    creatureObject:sendSystemMessage(self.trackConfig.waypoints[index+1].wpName) -- Next waypoint is...
+    creatureObject:playMusicMessage("sound/ui_select_info.snd")
   end)
 end
 
@@ -140,12 +154,6 @@ function  CivicInspectorScreenPlay:finalWaypoint(pActiveArea, pObject)
   end)
 end
 
-function  CivicInspectorScreenPlay:resetQuest(pObject)
-  ObjectManager.withCreatureAndPlayerObject(pObject, function(creatureObject,playerObject)
-    creatureObject:playMusicMessage("sound/music_combat_bfield_vict.snd")
-    clearScreenPlayData(pObject,self.trackConfig.trackName )
-  end)
-end
 
 function CivicInspectorScreenPlay:getLaptime(pObject)
   local startTime = readScreenPlayData(pObject, self.trackConfig.trackName, "starttime")
@@ -178,13 +186,18 @@ function CivicInspectorScreenPlay:createResetPlayerUnfinishedEvent(pObject)
 end
 
 function CivicInspectorScreenPlay:resetPlayerUnfinishedEventHandler(pObject)
-  ObjectManager.withCreaturePlayerObject(pObject, function(playerObject)
+  ObjectManager.withCreatureAndPlayerObject(pObject, function(creatureObject,playerObject)
     local startTime = tonumber(readScreenPlayData(pObject, self.trackConfig.trackName , "starttime"))
     if not(startTime == nil) then 
       local time = getTimestampMilli()
       if  math.abs((time/1000) - (startTime/1000)) > (self.trackConfig.expiryTime-5) then
         clearScreenPlayData(pObject,self.trackConfig.trackName )
         playerObject:removeWaypointBySpecialType(WAYPOINTRACETRACK)
+        
+        creatureObject:removeScreenPlayState(CivicInspectorScreenPlay.states.active, CivicInspectorScreenPlay.screenplayName)
+        creatureObject:removeScreenPlayState(CivicInspectorScreenPlay.states.complete, CivicInspectorScreenPlay.screenplayName)
+        creatureObject:sendSystemMessage("Sorry, you have failed to complete your mission in time.")
+        creatureObject:playMusicMessage("sound/music_themequest_fail_imperial.snd")
         if self.trackConfig.debugMode==1 then
           printf("Reset Player for :" .. self.trackConfig.trackName .. "\n")
         end
@@ -255,7 +268,7 @@ function civicinspector_convo_handler:getNextConversationScreen(conversationTemp
       local luaLastConversationScreen = LuaConversationScreen(lastConversationScreen)
       local optionLink = luaLastConversationScreen:getOptionLink(selectedOption)
       
-      if (optionLink == "west_end") then
+      if (optionLink == "quest_accept") then
         -- Player has accepted the quest
         creature:setScreenPlayState(CivicInspectorScreenPlay.states.active, CivicInspectorScreenPlay.screenplayName)
       end
@@ -331,7 +344,7 @@ function civicinspector_convo_handler:runScreenHandlers(conversationTemplate, co
   local screen = LuaConversationScreen(conversationScreen)
   local screenID = screen:getScreenID()
   
-  if ( screenID == "quest_west" ) then
+  if ( screenID == "quest_accept" ) then
     CivicInspectorScreenPlay:startRacing(conversingPlayer)
   end
 
