@@ -68,6 +68,9 @@ function NewPlayerFestivalScreenPlay:spawnSceneObjects()
   spawnSceneObject("naboo", "object/static/item/item_con_bag_ingredients_lg_s1.iff", -4862.57, 7.01562, 4140.54, 0, -0.255617, 0, 0.966778, 0)
   spawnSceneObject("naboo", "object/static/item/item_medic_medpack_lg.iff", -4865.01, 7.01562, 4141.12, 0, 0.988908, 0, -0.148527, 0)
   
+  -- Theed Waterfall
+  spawnSceneObject("naboo", "object/static/installation/mockup_power_generator_fusion_style_1.iff", -4685.18, 6.0, 4234.13, 0, 0.933026, 0, 0.359808, 0)
+
 
 
 end

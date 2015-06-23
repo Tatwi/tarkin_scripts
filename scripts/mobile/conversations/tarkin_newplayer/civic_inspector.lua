@@ -91,10 +91,34 @@ civicinspector_quest_active = ConvoScreen:new {
   customDialogText = "Didn't I give you a job to do?.",
   stopConversation = "false",
   options = { 
-    {"You sure did, I will get right on it!", "bye"}
+    {"You sure did, I will get right on it!", "bye"},
+    {"I don't want to do this job anymore.", "confirm_reset"}
   }
 }
 civicinspector_template:addScreen(civicinspector_quest_active);
+
+civicinspector_confirm_reset = ConvoScreen:new {
+  id = "confirm_reset",
+  leftDialog = "",
+  customDialogText = "Are you sure you want to abandon this mission?",
+  stopConversation = "false",
+  options = { 
+    {"Yes, I am sure I want to abandon this mission.", "quest_reset"},
+    {"No, I want to keep trying.", "bye"}
+  }
+}
+civicinspector_template:addScreen(civicinspector_confirm_reset);
+
+
+civicinspector_quest_reset = ConvoScreen:new {
+  id = "quest_reset",
+  leftDialog = "",
+  customDialogText = "Come back and see me if you would like to try again later.",
+  stopConversation = "true",
+  options = { 
+  }
+}
+civicinspector_template:addScreen(civicinspector_quest_reset);
 
 
 civicinspector_quest_complete = ConvoScreen:new {
